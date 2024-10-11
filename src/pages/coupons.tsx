@@ -12,6 +12,18 @@ export default function Coupons() {
   const [coupon, setCoupon] = useState<Coupon | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
 
+  const formatCouponCode = (code: string): string => {
+    const parts = code.match(/.{1,3}/g);
+    if (!parts) return code;
+    const lastPart = parts.pop();
+    if (lastPart && lastPart.length === 3) {
+      parts.push(lastPart + code.slice(-1));
+    } else if (lastPart) {
+      parts.push(lastPart);
+    }
+    return parts.join('-');
+  };
+
   const createCoupon = async () => {
     const res = await fetch('/api/coupons', {
       method: 'POST',
@@ -37,7 +49,7 @@ export default function Coupons() {
       <button onClick={createCoupon}>Create Coupon</button>
       {coupon ? (
         <div>
-          <p>Code: {coupon.code}</p>
+          <p>Code: {formatCouponCode(coupon.code)}</p>
           <p>Discount: {coupon.discount}%</p>
           <p>Remaining: {coupon.remaining}%</p>
           {/* <img src={coupon.qrCode} alt="QR Code" /> */}
