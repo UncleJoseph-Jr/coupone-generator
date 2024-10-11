@@ -11,6 +11,8 @@ interface Coupon {
 export default function Coupons() {
   const [coupon, setCoupon] = useState<Coupon | null>(null);
   const [qrCode, setQrCode] = useState<string | null>(null);
+  const [price, setPrice] = useState<number>(0);
+  const [maxDiscount, setMaxDiscount] = useState<number>(20);
 
   const formatCouponCode = (code: string): string => {
     const parts = code.match(/.{1,3}/g);
@@ -46,13 +48,38 @@ export default function Coupons() {
   return (
     <div>
       <h1>Coupon System</h1>
+
+      {/* อินพุตสำหรับกรอกราคาคูปอง */}
+      <div>
+        <label htmlFor="price">Coupon Price: </label>
+        <input
+          type="number"
+          id="price"
+          value={price}
+          onChange={(e) => setPrice(Number(e.target.value))}
+          placeholder="Enter coupon price"
+        />
+      </div>
+
+      {/* อินพุตสำหรับกรอกส่วนลดสูงสุด */}
+      <div>
+        <label htmlFor="maxDiscount">Max Discount (%): </label>
+        <input
+          type="number"
+          id="maxDiscount"
+          value={maxDiscount}
+          onChange={(e) => setMaxDiscount(Number(e.target.value))}
+          placeholder="Enter max discount %"
+        />
+      </div>
+
       <button onClick={createCoupon}>Create Coupon</button>
+
       {coupon ? (
         <div>
           <p>Code: {formatCouponCode(coupon.code)}</p>
           <p>Discount: {coupon.discount}%</p>
           <p>Remaining: {coupon.remaining}%</p>
-          {/* <img src={coupon.qrCode} alt="QR Code" /> */}
           {qrCode && <img src={qrCode} alt="QR Code" />}
         </div>
       ) : (
