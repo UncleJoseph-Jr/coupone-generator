@@ -25,8 +25,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           remaining: discount,
         },
       });
+
+      const qrCode = await generateQRCode(code);
+
       return res.status(201).json({ coupon, qrCode });
     } catch (error) {
+        console.error('Error creating coupon:', error)
       return res.status(500).json({ message: 'Error creating coupon' });
     }
   } else {

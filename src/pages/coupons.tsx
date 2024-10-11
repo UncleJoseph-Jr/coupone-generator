@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
 
 interface Coupon {
@@ -9,6 +10,7 @@ interface Coupon {
 
 export default function Coupons() {
   const [coupon, setCoupon] = useState<Coupon | null>(null);
+  const [qrCode, setQrCode] = useState<string | null>(null);
 
   const createCoupon = async () => {
     const res = await fetch('/api/coupons', {
@@ -19,20 +21,30 @@ export default function Coupons() {
       body: JSON.stringify({ discount: 10 }),
     });
     const data = await res.json();
-    setCoupon(data);
+    if (data.coupon && data.qrCode){
+      setCoupon(data.coupon);
+      setQrCode(data.qrCode);
+    } else {
+      setCoupon(null);
+      setQrCode(null);
+    }
+    // setCoupon(data.coupon ? data.coupon : null);
   };
 
   return (
     <div>
       <h1>Coupon System</h1>
       <button onClick={createCoupon}>Create Coupon</button>
-      {coupon && (
+      {coupon ? (
         <div>
           <p>Code: {coupon.code}</p>
           <p>Discount: {coupon.discount}%</p>
           <p>Remaining: {coupon.remaining}%</p>
-          <img src={coupon.qrCode} alt="QR Code" />
+          {/* <img src={coupon.qrCode} alt="QR Code" /> */}
+          {qrCode && <img src={qrCode} alt="QR Code" />}
         </div>
+      ) : (
+        <p>No coupon generated yet.</p>
       )}
     </div>
   );
