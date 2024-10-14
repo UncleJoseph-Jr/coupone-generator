@@ -1,5 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
+import Link from 'next/link';
 
 interface Coupon {
   code: string;
@@ -74,6 +75,9 @@ export default function Coupons() {
       </div>
 
       <button onClick={createCoupon}>Create Coupon</button>
+      <div>
+        <Link href="/couponsList">View All Coupons</Link>
+      </div>
 
       {coupon ? (
         <div>
