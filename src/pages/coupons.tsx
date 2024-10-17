@@ -1,94 +1,82 @@
 /* eslint-disable @next/next/no-img-element */
 import { useState } from 'react';
-import Link from 'next/link';
+import QRCode from 'qrcode';
 
-interface Coupon {
-  code: string;
-  discount: number;
-  remaining: number;
-  qrCode: string;
-}
+const Coupons = () => {
+  const [points, setPoints] = useState<number>(0); // สถานะสำหรับเก็บค่า points
+  const [quantity, setQuantity] = useState<number>(1); // สถานะสำหรับเก็บจำนวนคูปองที่จะสร้าง
+  const [qrCodes, setQrCodes] = useState<{ code: string; qr: string }[]>([]); // สถานะสำหรับเก็บรหัสคูปองและ QR codes
 
-export default function Coupons() {
-  const [coupon, setCoupon] = useState<Coupon | null>(null);
-  const [qrCode, setQrCode] = useState<string | null>(null);
-  const [price, setPrice] = useState<number>(0);
-  const [maxDiscount, setMaxDiscount] = useState<number>(20);
+  const handleCreateCoupons = async () => {
+    const codesAndQRCodes: { code: string; qr: string }[] = []; // ตัวแปรเก็บรหัสคูปองและ QR codes
 
-  const formatCouponCode = (code: string): string => {
-    const parts = code.match(/.{1,3}/g);
-    if (!parts) return code;
-    const lastPart = parts.pop();
-    if (lastPart && lastPart.length === 3) {
-      parts.push(lastPart + code.slice(-1));
-    } else if (lastPart) {
-      parts.push(lastPart);
+    for (let i = 0; i < quantity; i++) {
+      const response = await fetch('/api/coupons', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ points }), // ส่ง points ไปยัง API
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Coupon created:', data); // ตรวจสอบว่าได้รับข้อมูลตอบกลับจาก API
+        const qrCodeData = await generateQRCode(data.coupon.code); // สร้าง QR code
+        codesAndQRCodes.push({ code: data.coupon.code, qr: qrCodeData }); // บันทึกรหัสคูปองและ QR code
+      } else {
+        console.error('Failed to create coupon');
+      }
     }
-    return parts.join('-');
+
+    setQrCodes(codesAndQRCodes); // ตั้งค่าสถานะ qrCodes หลังจากสร้างคูปองทั้งหมด
+    setPoints(0); // รีเซ็ตค่าของ points หลังจากสร้างคูปองสำเร็จ
+    setQuantity(1); // รีเซ็ตค่าของ quantity
   };
 
-  const createCoupon = async () => {
-    const res = await fetch('/api/coupons', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ discount: 10 }),
-    });
-    const data = await res.json();
-    if (data.coupon && data.qrCode){
-      setCoupon(data.coupon);
-      setQrCode(data.qrCode);
-    } else {
-      setCoupon(null);
-      setQrCode(null);
+  const generateQRCode = async (text: string): Promise<string> => {
+    try {
+      return await QRCode.toDataURL(text);
+    } catch (err) {
+      console.error('Error generating QR Code:', err);
+      throw new Error('Error generating QR code');
     }
-    // setCoupon(data.coupon ? data.coupon : null);
   };
 
   return (
     <div>
-      <h1>Coupon System</h1>
-
-      {/* อินพุตสำหรับกรอกราคาคูปอง */}
+      <h1>Create Coupons</h1>
+      
       <div>
-        <label htmlFor="price">Coupon Price: </label>
         <input
           type="number"
-          id="price"
-          value={price}
-          onChange={(e) => setPrice(Number(e.target.value))}
-          placeholder="Enter coupon price"
+          value={points}
+          onChange={(e) => setPoints(Number(e.target.value))} // เปลี่ยนค่าที่กรอกใน input เป็น number
+          placeholder="Enter points"
         />
-      </div>
-
-      {/* อินพุตสำหรับกรอกส่วนลดสูงสุด */}
-      <div>
-        <label htmlFor="maxDiscount">Max Discount (%): </label>
         <input
           type="number"
-          id="maxDiscount"
-          value={maxDiscount}
-          onChange={(e) => setMaxDiscount(Number(e.target.value))}
-          placeholder="Enter max discount %"
+          value={quantity}
+          onChange={(e) => setQuantity(Number(e.target.value))} // เปลี่ยนค่าที่กรอกใน input เป็น number
+          min={1} // กำหนดค่าต่ำสุดเป็น 1
+          placeholder="Enter quantity"
         />
+        <button onClick={handleCreateCoupons}>Create Coupons</button>
       </div>
 
-      <button onClick={createCoupon}>Create Coupon</button>
-      <div>
-        <Link href="/couponsList">View All Coupons</Link>
-      </div>
-
-      {coupon ? (
+      {qrCodes.length > 0 && (
         <div>
-          <p>Code: {formatCouponCode(coupon.code)}</p>
-          <p>Discount: {coupon.discount}%</p>
-          <p>Remaining: {coupon.remaining}%</p>
-          {qrCode && <img src={qrCode} alt="QR Code" />}
+          <h2>Generated Coupons:</h2>
+          {qrCodes.map(({ code, qr }, index) => (
+            <div key={index}>
+              <p>Coupon Code: {code}</p>
+              <img src={qr} alt={`QR Code for ${code}`} /> {/* Show QR code */}
+            </div>
+          ))}
         </div>
-      ) : (
-        <p>No coupon generated yet.</p>
       )}
     </div>
   );
-}
+};
+
+export default Coupons;

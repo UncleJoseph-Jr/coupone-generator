@@ -16,8 +16,7 @@ generator client {
 model Coupon {
   id         String   @id @default(uuid())
   code       String   @unique
-  discount   Float
-  remaining  Float
+  points     Int      @default(0)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 }
