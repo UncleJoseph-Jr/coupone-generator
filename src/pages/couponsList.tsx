@@ -13,7 +13,7 @@ const CouponsList = () => {
 
   useEffect(() => {
     const fetchCoupons = async () => {
-      const response = await fetch('/api/coupons');
+      const response = await fetch('/api/createcoupons');
       const data = await response.json();
       console.log('Coupons fetched:', data); // ตรวจสอบข้อมูลที่ดึงมาจาก API
       setCoupons(data);
@@ -23,7 +23,7 @@ const CouponsList = () => {
   }, []);
 
   const handleCreateCoupon = async () => {
-    const response = await fetch('/api/coupons', {
+    const response = await fetch('/api/createcoupons', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -42,7 +42,7 @@ const CouponsList = () => {
   };
 
   const deleteCoupon = async (id: string) => {
-    const response = await fetch(`/api/coupons?id=${id}`, {
+    const response = await fetch(`/api/createcoupons?id=${id}`, {
       method: 'DELETE',
     });
     if (response.ok) {
