@@ -11,7 +11,7 @@ const Coupons = () => {
     const codesAndQRCodes: { code: string; qr: string }[] = []; // ตัวแปรเก็บรหัสคูปองและ QR codes
 
     for (let i = 0; i < quantity; i++) {
-      const response = await fetch('/api/coupons', {
+      const response = await fetch('/api/createcoupons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
