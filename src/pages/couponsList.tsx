@@ -1,87 +1,122 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface Coupon {
   id: string;
   code: string;
-  points: number; // เปลี่ยนจาก discount และ remaining เป็น points
+  points: number;
   createdAt: string;
+  updatedAt: string;
 }
 
-const CouponsList = () => {
+export default function CouponsList() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
-  const [points, setPoints] = useState<number>(0); // สถานะสำหรับเก็บค่า points
+  const [page, setPage] = useState(1);
+  const [searchTerm, setSearchTerm] = useState(''); // เพิ่ม state สำหรับค้นหา
+  const couponsPerPage = 20;
 
   useEffect(() => {
     const fetchCoupons = async () => {
       const response = await fetch('/api/createcoupons');
       const data = await response.json();
-      console.log('Coupons fetched:', data); // ตรวจสอบข้อมูลที่ดึงมาจาก API
       setCoupons(data);
     };
 
     fetchCoupons();
   }, []);
 
-  const handleCreateCoupon = async () => {
-    const response = await fetch('/api/createcoupons', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ points }), // ส่ง points ไปยัง API
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      console.log('Coupon created:', data); // ตรวจสอบว่าได้รับข้อมูลตอบกลับจาก API
-      setCoupons([...coupons, data.coupon]);
-      setPoints(0); // รีเซ็ตค่าของ points หลังจากสร้างคูปองสำเร็จ
-    } else {
-      console.error('Failed to create coupon');
-    }
-  };
-
-  const deleteCoupon = async (id: string) => {
-    const response = await fetch(`/api/createcoupons?id=${id}`, {
-      method: 'DELETE',
-    });
-    if (response.ok) {
+  const handleDelete = async (id: string) => {
+    try {
+      await fetch(`/api/createcoupons/${id}`, {
+        method: 'DELETE',
+      });
       setCoupons(coupons.filter((coupon) => coupon.id !== id));
-    } else {
-      console.error('Failed to delete coupon');
+    } catch (error) {
+      console.error('Error deleting coupon:', error);
     }
   };
+
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (page * couponsPerPage < coupons.length) {
+      setPage(page + 1);
+    }
+  };
+
+  const filteredCoupons = coupons.filter((coupon) =>
+    coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) // กรองคูปองตามรหัสที่ค้นหา
+  );
+
+  const paginatedCoupons = filteredCoupons.slice(
+    (page - 1) * couponsPerPage,
+    page * couponsPerPage
+  );
 
   return (
-    <div>
-      <h1>Coupons List</h1>
-      
-      <div>
+    <div className="container mx-auto mt-8">
+      <h1 className="text-2xl font-bold mb-4">Coupons List</h1>
+
+      {/* เพิ่มช่องค้นหาคูปอง */}
+      <div className="mb-4">
         <input
-          type="number"
-          value={points}
-          onChange={(e) => setPoints(Number(e.target.value))} // เปลี่ยนค่าที่กรอกใน input เป็น number
-          placeholder="Enter points"
+          type="text"
+          placeholder="Search by coupon code..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border p-2 w-full"
         />
-        <button onClick={handleCreateCoupon}>Create Coupon</button>
       </div>
-      
-      {coupons.length > 0 ? (
-        <ul>
-          {coupons.map((coupon) => (
-            <li key={coupon.id}>
-              <p>Code: {coupon.code}</p>
-              <p>Points: {coupon.points}</p>
-              <p>Created At: {new Date(coupon.createdAt).toLocaleString()}</p>
-              <button onClick={() => deleteCoupon(coupon.id)}>Delete</button>
-            </li>
+
+      <table className="min-w-full bg-white border border-gray-300">
+        <thead>
+          <tr>
+            <th className="py-2 px-4 border-b">Code</th>
+            <th className="py-2 px-4 border-b">Points</th>
+            <th className="py-2 px-4 border-b">Created At</th>
+            <th className="py-2 px-4 border-b">Updated At</th>
+            <th className="py-2 px-4 border-b">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {paginatedCoupons.map((coupon) => (
+            <tr key={coupon.id}>
+              <td className="py-2 px-4 border-b">{coupon.code}</td>
+              <td className="py-2 px-4 border-b">{coupon.points}</td>
+              <td className="py-2 px-4 border-b">{new Date(coupon.createdAt).toLocaleString()}</td>
+              <td className="py-2 px-4 border-b">{new Date(coupon.updatedAt).toLocaleString()}</td>
+              <td className="py-2 px-4 border-b">
+                <button
+                  onClick={() => handleDelete(coupon.id)}
+                  className="bg-red-500 text-white px-2 py-1 rounded"
+                >
+                  Delete
+                </button>
+              </td>
+            </tr>
           ))}
-        </ul>
-      ) : (
-        <p>No coupons found.</p>
-      )}
+        </tbody>
+      </table>
+
+      <div className="flex justify-between mt-4">
+        <button
+          onClick={handlePreviousPage}
+          disabled={page === 1}
+          className="bg-gray-500 text-white px-3 py-1 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <button
+          onClick={handleNextPage}
+          disabled={page * couponsPerPage >= filteredCoupons.length}
+          className="bg-gray-500 text-white px-3 py-1 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
-};
-
-export default CouponsList;
+}

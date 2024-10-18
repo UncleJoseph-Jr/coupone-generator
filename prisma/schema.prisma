@@ -14,9 +14,10 @@ generator client {
 }
 
 model Coupon {
-  id         String   @id @default(uuid())
-  code       String   @unique
-  points     Int      @default(0)
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String   @id @default(uuid())
+  code          String   @unique
+  points        Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  expirationDate DateTime 
 }

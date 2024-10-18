@@ -1,76 +1,78 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @next/next/no-img-element */
-import { useState } from 'react';
-import QRCode from 'qrcode';
+import React, { useState } from 'react';
+import axios from 'axios';
 
-const Coupons = () => {
-  const [points, setPoints] = useState<number>(0); // สถานะสำหรับเก็บค่า points
-  const [quantity, setQuantity] = useState<number>(1); // สถานะสำหรับเก็บจำนวนคูปองที่จะสร้าง
-  const [qrCodes, setQrCodes] = useState<{ code: string; qr: string }[]>([]); // สถานะสำหรับเก็บรหัสคูปองและ QR codes
+const CreateCouponsPage: React.FC = () => {
+  const [points, setPoints] = useState<number>(0);
+  const [quantity, setQuantity] = useState<number>(1);
+  const [expirationDays, setExpirationDays] = useState<number>(7);
+  const [coupons, setCoupons] = useState<any[]>([]);
 
   const handleCreateCoupons = async () => {
-    const codesAndQRCodes: { code: string; qr: string }[] = []; // ตัวแปรเก็บรหัสคูปองและ QR codes
-
-    for (let i = 0; i < quantity; i++) {
-      const response = await fetch('/api/createcoupons', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ points }), // ส่ง points ไปยัง API
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Coupon created:', data); // ตรวจสอบว่าได้รับข้อมูลตอบกลับจาก API
-        const qrCodeData = await generateQRCode(data.coupon.code); // สร้าง QR code
-        codesAndQRCodes.push({ code: data.coupon.code, qr: qrCodeData }); // บันทึกรหัสคูปองและ QR code
-      } else {
-        console.error('Failed to create coupon');
-      }
-    }
-
-    setQrCodes(codesAndQRCodes); // ตั้งค่าสถานะ qrCodes หลังจากสร้างคูปองทั้งหมด
-    setPoints(0); // รีเซ็ตค่าของ points หลังจากสร้างคูปองสำเร็จ
-    setQuantity(1); // รีเซ็ตค่าของ quantity
-  };
-
-  const generateQRCode = async (text: string): Promise<string> => {
     try {
-      return await QRCode.toDataURL(text);
-    } catch (err) {
-      console.error('Error generating QR Code:', err);
-      throw new Error('Error generating QR code');
+      const response = await axios.post('/api/createcoupons', {
+        points,
+        quantity,
+        expirationDays,
+      });
+      setCoupons(response.data.coupons);
+    } catch (error) {
+      console.error('Error creating coupons:', error);
     }
   };
 
   return (
-    <div>
-      <h1>Create Coupons</h1>
-      
-      <div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-4">Create Coupons</h1>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700">Points</label>
         <input
           type="number"
           value={points}
-          onChange={(e) => setPoints(Number(e.target.value))} // เปลี่ยนค่าที่กรอกใน input เป็น number
-          placeholder="Enter points"
+          onChange={(e) => setPoints(Number(e.target.value))}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
         />
+      </div>
+
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700">Quantity</label>
         <input
           type="number"
           value={quantity}
-          onChange={(e) => setQuantity(Number(e.target.value))} // เปลี่ยนค่าที่กรอกใน input เป็น number
-          min={1} // กำหนดค่าต่ำสุดเป็น 1
-          placeholder="Enter quantity"
+          onChange={(e) => setQuantity(Number(e.target.value))}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
         />
-        <button onClick={handleCreateCoupons}>Create Coupons</button>
       </div>
 
-      {qrCodes.length > 0 && (
-        <div>
-          <h2>Generated Coupons:</h2>
-          {qrCodes.map(({ code, qr }, index) => (
-            <div key={index}>
-              <p>Coupon Code: {code}</p>
-              <img src={qr} alt={`QR Code for ${code}`} /> {/* แสดง QR code */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700">Expiration Days</label>
+        <input
+          type="number"
+          value={expirationDays}
+          onChange={(e) => setExpirationDays(Number(e.target.value))}
+          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
+        />
+      </div>
+
+      <button
+        onClick={handleCreateCoupons}
+        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+      >
+        Create Coupons
+      </button>
+
+      {/* Display created coupons */}
+      {coupons.length > 0 && (
+        <div className="mt-6">
+          <h2 className="text-xl font-semibold mb-4">Created Coupons</h2>
+          {coupons.map((coupon, index) => (
+            <div key={index} className="border p-4 mb-4 rounded-md">
+              <p><strong>Coupon Code:</strong> {coupon.coupon.code}</p>
+              <p><strong>Expiration Date:</strong> {new Date(coupon.coupon.expirationDate).toLocaleDateString()}</p>
+              <p><strong>QR Code:</strong></p>
+              <img src={coupon.qrCode} alt={`QR Code for ${coupon.coupon.code}`} />
             </div>
           ))}
         </div>
@@ -79,4 +81,4 @@ const Coupons = () => {
   );
 };
 
-export default Coupons;
+export default CreateCouponsPage;

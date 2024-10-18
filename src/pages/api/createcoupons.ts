@@ -7,27 +7,41 @@ const prisma = new PrismaClient();
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === 'POST') {
-    const { points } = req.body;
+    const { points, quantity, expirationDays } = req.body;
 
-    if (!points || points <= 0) {
-      return res.status(400).json({ message: 'Invalid points value' });
+    // Validate input
+    if (!points || points <= 0 || !quantity || quantity <= 0 || !expirationDays || expirationDays <= 0) {
+      return res.status(400).json({ message: 'Invalid input' });
     }
 
-    const code = generateCouponCode();
-    const qrCode = await generateQRCode(code);
-
     try {
-      const coupon = await prisma.coupon.create({
-        data: {
-          code,
-          points, // บันทึกจำนวน points
-        },
-      });
+      const coupons = [];  // Array to store generated coupons
 
-      return res.status(201).json({ coupon, qrCode });
+      for (let i = 0; i < quantity; i++) {
+        const code = generateCouponCode();  // Generate unique coupon code
+        const qrCode = await generateQRCode(code);  // Generate QR code for the coupon
+
+        // Calculate expiration date
+        const expirationDate = new Date();
+        expirationDate.setDate(expirationDate.getDate() + expirationDays);  // Add expirationDays to current date
+
+        // Save coupon to database
+        const coupon = await prisma.coupon.create({
+          data: {
+            code,
+            points,  // Save points
+            expirationDate,  // Save expiration date
+          },
+        });
+
+        coupons.push({ coupon, qrCode });  // Add generated coupon and QR code to the array
+      }
+
+      // Return created coupons and QR codes
+      return res.status(201).json({ coupons });
     } catch (error) {
       console.error('Error creating coupon:', error);
-      return res.status(500).json({ message: 'Error creating coupon' });
+      return res.status(500).json({ message: 'Error creating coupons' });
     }
   } else if (req.method === 'GET') {
     try {
