@@ -25,15 +25,19 @@ export default function CouponsList() {
   }, []);
 
   const handleDelete = async (id: string) => {
-    try {
-      await fetch(`/api/createcoupons/${id}`, {
-        method: 'DELETE',
-      });
-      setCoupons(coupons.filter((coupon) => coupon.id !== id));
-    } catch (error) {
-      console.error('Error deleting coupon:', error);
-    }
-  };
+  try {
+    await fetch('/api/deletecoupon', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ id }),
+    });
+    setCoupons(coupons.filter((coupon) => coupon.id !== id));
+  } catch (error) {
+    console.error('Error deleting coupon:', error);
+  }
+};
 
   const handlePreviousPage = () => {
     if (page > 1) {
