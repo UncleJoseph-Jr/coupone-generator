@@ -65,10 +65,16 @@ bun dev
 ```
 This command will start the app at `http://localhost:3000.`
 
-## 6. Generate QR codes and coupons
+## 6. Check the Database
+Try checking your database to see if the `Coupon` table has the `points` field and if the coupons you created are being saved in the database. You can use Prisma Studio to easily verify this.
+```bash
+npx prisma studio
+```
+
+## 7. Generate QR codes and coupons
 To create coupons, you can navigate to the coupon creation page and fill in the required details (points, quantity, and expiration days). Coupons will be displayed with their QR codes in the list.
 
-## 7. Manage coupons
+## 8. Manage coupons
 You can view the list of coupons, delete any coupon, or search for specific coupons by code. Pagination is implemented, showing 20 coupons per page.
 
 ## API Endpoints
