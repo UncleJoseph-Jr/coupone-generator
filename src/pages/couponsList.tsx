@@ -16,7 +16,7 @@ export default function CouponsList() {
 
   useEffect(() => {
     const fetchCoupons = async () => {
-      const response = await fetch('/api/fetchcoupons');
+      const response = await fetch('/api/fetchcoupon');
       const data = await response.json();
       setCoupons(data);
     };
