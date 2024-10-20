@@ -14,6 +14,7 @@ export default function CouponsList() {
   const [searchTerm, setSearchTerm] = useState(''); // เพิ่ม state สำหรับค้นหา
   const couponsPerPage = 20;
 
+  // Fetch coupons from the API when the component is mounted
   useEffect(() => {
     const fetchCoupons = async () => {
       const response = await fetch('/api/fetchcoupon');
@@ -24,6 +25,7 @@ export default function CouponsList() {
     fetchCoupons();
   }, []);
 
+  // Function to handle deleting a coupon
   const handleDelete = async (id: string) => {
   try {
     const response = await fetch('/api/deletecoupon', {
@@ -35,7 +37,7 @@ export default function CouponsList() {
     });
 
     if (response.ok) {
-      setCoupons(coupons.filter((coupon) => coupon.id !== id));
+      setCoupons(coupons.filter((coupon) => coupon.id !== id)); // Remove the deleted coupon from the state
     } else {
       console.error('Failed to delete coupon:', await response.json());
     }
@@ -57,10 +59,12 @@ export default function CouponsList() {
     }
   };
 
+  // Filters the coupons by the search term
   const filteredCoupons = coupons.filter((coupon) =>
     coupon.code.toLowerCase().includes(searchTerm.toLowerCase()) // กรองคูปองตามรหัสที่ค้นหา
   );
 
+  // Paginates the coupons
   const paginatedCoupons = filteredCoupons.slice(
     (page - 1) * couponsPerPage,
     page * couponsPerPage

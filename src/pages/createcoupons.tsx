@@ -16,7 +16,7 @@ const CreateCouponsPage: React.FC = () => {
         quantity,
         expirationDays,
       });
-      setCoupons(response.data.coupons);
+      setCoupons(response.data.coupons); // Save the created coupons to the state
     } catch (error) {
       console.error('Error creating coupons:', error);
     }
